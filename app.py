@@ -245,13 +245,36 @@ def listcategoria():
 @app.route('/editar_categoria/<nome_categoria>', methods=['GET', 'POST'])
 @login_requerido
 def editar_categoria(nome_categoria):
-    return render_template('categoria.html')
+
+    service =  CategoriaService()
+    try:
+        categoria = service.buscar_por_nome(nome_categoria)
+    except ValueError:
+        flash("Categoria não encontrada", "error")
+        return redirect(url_for("listcategoria"))
+
+    if request.method == "POST":
+        nova_categoria = request.form["categoria-receita"]
+        try:
+            service.atualizar_categoria(nome_categoria, nova_categoria)
+            flash("Categoria atualizada com sucesso!", "success")
+            return redirect(url_for("listcategoria"))
+        except Exception as e:
+            flash(str(e), "error")
+
+    return render_template('categoria.html', categoria = categoria)
 
 
 # Rota para excluir categoria
 @app.route('/excluir_categoria/<nome_categoria>')
 @login_requerido
 def excluir_categoria(nome_categoria):
+    service = CategoriaService()
+    try:
+        service.excluir_categoria(nome_categoria)
+        flash("Categoria excluída com sucesso!", "success")
+    except ValueError:
+        flash("Categoria não excluída", "error")
     return redirect(url_for('listcategoria'))
 
 
