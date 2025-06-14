@@ -14,6 +14,10 @@ from core.login.login_service import LoginService
 from core.categoria.categoria import Categoria
 from core.categoria.categoria_service import CategoriaService
 
+# Importação do core Contato e ContatoService
+from core.contato.contato import Contato
+from core.contato.contato_service import ContatoService
+
 app = Flask(__name__)
 app.secret_key = '1234567890abcdef'
 
@@ -191,7 +195,34 @@ def excluir_usuario(id):
 @app.route('/contato', methods=['GET', 'POST'])
 @login_requerido
 def contato():
-    return render_template('contato.html')
+    service = ContatoService()
+
+    if request.method == "POST":
+        contato = Contato(
+            id = 1,
+            facebook = request.form.get("facebook"),
+            rede_x = request.form.get("rede_x"),
+            instagram = request.form.get("instagram"),
+            linkedin = request.form.get("linkedin"),
+            github = request.form.get("github")
+        )
+        service.atualizar_ou_inserir(contato)
+        flash("Contatos atualizados com sucesso!", "success")
+        return redirect(url_for("contato"))
+
+    try:
+        contato = contato_service.obter_contato()
+    except ValueError:
+        contato = Contato(
+            id = 1,
+            facebook = "",
+            rede_x = "",
+            instagram = "",
+            linkedin = "",
+            github = ""
+        )
+
+    return render_template('contato.html', contato=contato)
 
 
 # Rota para a página receita
