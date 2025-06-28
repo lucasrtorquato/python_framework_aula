@@ -18,6 +18,10 @@ from core.categoria.categoria_service import CategoriaService
 from core.contato.contato import Contato
 from core.contato.contato_service import ContatoService
 
+# Importação do core Receita e ReceitaService
+from core.receita.receita import Receita
+from core.receita.receita_service import ReceitaService
+
 app = Flask(__name__)
 app.secret_key = '1234567890abcdef'
 
@@ -229,14 +233,83 @@ def contato():
 @app.route('/receita', methods=['GET', 'POST'])
 @login_requerido
 def receita():
-    return render_template('receita.html')
+    receita_service = ReceitaService()
+    categoria_service = CategoriaService()
+    categorias = categoria_service.listar_categorias()
+
+    if request.method == "POST":
+        nome = request.form.get("nome-receita","").strip()
+        ingredientes = request.form.get("ingredientes","").strip()
+        modo_preparo = request.form.get("modo_preparo","").strip()
+        categoria = request.form.get("categoria","").strip()
+
+        if not nome or not ingredientes or not modo_preparo or not categoria:
+            flash("Todos os campos são obrigatórios", "error")
+        else:
+            receita = Receita(0, nome, ingredientes, modo_preparo, categoria)
+            receita_service.cadastrar_ou_atualizar(receita)
+            flash("Receita cadastrada com sucesso!", "success")
+
+    return render_template('receita.html', categorias = categorias)
+
+
 
 
 # Rota para a página listreceita
 @app.route('/listreceita', methods=['GET', 'POST'])
 @login_requerido
 def listreceita():
-    return render_template('listreceita.html')
+
+    service = ReceitaService()
+    try:
+        receitas = service.listar_receitas()
+    except:
+        receitas = []
+
+    return render_template('list_receita.html', receitas = receitas)
+
+
+#Rota para editar receita
+@app.route('/editar_receita/<int:id>', methods=['GET', 'POST'])
+@login_requerido
+def editar_receita(id):
+   
+    receita_service = ReceitaService()
+    categoria_service = CategoriaService()
+
+    try:
+        receita = receita_service.obter_receita_por_id(id)
+        categorias = categoria_service.listar_categorias()
+    except:
+        flash("Receita não encontrada", "error")
+        return redirect(url_for("listreceita"))
+
+    if request.method == "POST":
+        nome = request.form.get("nome-receita","").strip()
+        ingredientes = request.form.get("ingredientes","").strip()
+        modo_preparo = request.form.get("modo_preparo","").strip()
+        categoria = request.form.get("categoria","").strip()
+
+        if not nome or not ingredientes or not modo_preparo or not categoria:
+            flash("Todos os campos são obrigatórios", "error")
+        else:
+            receita = Receita(id, nome, ingredientes, modo_preparo, categoria)
+            receita_service.cadastrar_ou_atualizar(receita)
+            flash("Receita atualizada com sucesso!", "success")
+            return redirect(url_for("listreceita"))
+
+    return render_template("receita.html", receita=receita, categorias=categorias)
+
+@app.route("/excluir_receita/<int:id>")
+@login_requerido
+def excluir_receita(id):
+    service = ReceitaService()
+    try:
+        service.excluir_receita(id)
+        flash("Receita excluída com sucesso!", "success")
+    except:
+        flash("Receita não excluída/encontrada", "error")
+    return redirect(url_for("listreceita"))
 
 
 # Rota para a página categoria
