@@ -211,7 +211,7 @@ def contato():
         return redirect(url_for("contato"))
 
     try:
-        contato = contato_service.obter_contato()
+        contato = service.obter_contato()
     except ValueError:
         contato = Contato(
             id = 1,
@@ -307,6 +307,24 @@ def excluir_categoria(nome_categoria):
     except ValueError:
         flash("Categoria não excluída", "error")
     return redirect(url_for('listcategoria'))
+
+
+@app.context_processor
+def inject_social_links():
+    social_links = {}
+
+    service = ContatoService()
+    contato = service.obter_contato()
+    if contato:
+        social_links = {
+            "facebook": contato.facebook or "",
+            "rede_x": contato.rede_x or "",
+            "instagram": contato.instagram or "",
+            "linkedin": contato.linkedin or "",
+            "github": contato.github or ""
+        }
+    
+    return {"social_links": social_links}
 
 
 if __name__ == "__main__":
