@@ -51,3 +51,21 @@ class ReceitaRepository:
         query = 'DELETE FROM receitas WHERE id = ?'
         self.conn.execute(query, (id,))
         self.conn.commit()
+
+    def filtrar_por_nome_e_categoria(self, nome=None, categoria=None):
+        cursor = self.conn.cursor()
+        query = "SELECT * FROM receitas WHERE 1=1"
+        params = []
+
+        if nome:
+            query += " AND (nome_receita LIKE ? OR ingredientes LIKE ? OR modo_preparo LIKE ?)"
+            params.append(f"%{nome}%")
+            params.append(f"%{nome}%")
+            params.append(f"%{nome}%")
+        if categoria:
+            query += " AND categoria = ?"
+            params.append(categoria)
+
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return [Receita(**row) for row in rows]

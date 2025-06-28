@@ -399,6 +399,25 @@ def inject_social_links():
     
     return {"social_links": social_links}
 
+@app.route("/filtrarreceita", methods=['GET', 'POST'])
+@login_requerido
+def filtrarreceita():
+
+    service_categoria = CategoriaService()
+    categorias = service_categoria.listar_categorias()
+    receitas_filtradas = []
+
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        categoria = request.form.get('categoria')
+        # Validação básica
+        if not nome and not categoria:
+            flash("Informe pelo menos um filtro", "error")
+        else:
+            service_receita = ReceitaService()
+            receitas_filtradas = service_receita.filtrar_receitas(nome, categoria)
+    return render_template("filtrarreceita.html", receitas=receitas_filtradas, categorias=categorias, nome_filtro=nome if 'nome' in locals() else '', categoria_filtro=categoria if 'categoria' in locals() else '')
+
 
 if __name__ == "__main__":
     app.run(debug=True)
